@@ -40,7 +40,23 @@ class PointsController {
 
         await trx('points_items').insert(pointItem);
 
-        return response.json({ id: point_id, ...point }); 
+        return response.json({ id: point_id, ...point });
+    };
+
+    async show(request: Request, response: Response) {
+        const { id } = request.params;
+
+        const point = await knex('points').where('id', id).first();
+
+        if(!point)
+            return response.status(400).json({message: 'Point not found'});
+        
+        const items = await knex('items')
+            .join('points_items', 'items.id', '=', 'points_items.item_id')
+            .where('points_items.point_id', id)
+            .select('items.title');
+        
+        return response.json({point, items});
     }
 };
 
