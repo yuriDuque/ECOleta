@@ -2,8 +2,15 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, ImageBackground } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler'
 import { Feather as Icon } from '@expo/vector-icons';
+import { useNavigation} from '@react-navigation/native';
 
 const Home = () => {
+    const navigation = useNavigation();
+
+    function handleNavigateToPoints(){
+        navigation.navigate('Points');
+    }
+
     return (
         <ImageBackground
             source={require("../../assets/home-background.png")}
@@ -17,7 +24,7 @@ const Home = () => {
             </View>
 
             <View style={styles.footer}>
-                <RectButton style={styles.button} onPress={() => {}}>
+                <RectButton style={styles.button} onPress={handleNavigateToPoints}>
                     <View style={styles.buttonIcon}><Icon name="arrow-right" color="#FFF" size={24}></Icon></View>
                     <Text style={styles.buttonText}>Entrar</Text>
                 </RectButton>
@@ -26,19 +33,18 @@ const Home = () => {
 }
 
 const styles = StyleSheet.create({
-                container: {
-                flex: 1,
+    container: {
+        flex: 1,
         padding: 32,
-        backgroundColor: "#f0f0f5"
     },
 
     main: {
-                flex: 1,
+        flex: 1,
         justifyContent: 'center',
     },
 
     title: {
-                color: '#322153',
+        color: '#322153',
         fontSize: 32,
         fontFamily: 'Ubuntu_700Bold',
         maxWidth: 260,
@@ -46,7 +52,7 @@ const styles = StyleSheet.create({
     },
 
     description: {
-                color: '#6C6C80',
+        color: '#6C6C80',
         fontSize: 16,
         marginTop: 16,
         fontFamily: 'Roboto_400Regular',
@@ -59,7 +65,7 @@ const styles = StyleSheet.create({
     select: {},
 
     input: {
-                height: 60,
+        height: 60,
         backgroundColor: '#FFF',
         borderRadius: 10,
         marginBottom: 8,
@@ -68,7 +74,7 @@ const styles = StyleSheet.create({
     },
 
     button: {
-                backgroundColor: '#34CB79',
+        backgroundColor: '#34CB79',
         height: 60,
         flexDirection: 'row',
         borderRadius: 10,
@@ -78,7 +84,7 @@ const styles = StyleSheet.create({
     },
 
     buttonIcon: {
-                height: 60,
+        height: 60,
         width: 60,
         backgroundColor: 'rgba(0, 0, 0, 0.1)',
         justifyContent: 'center',
@@ -86,7 +92,7 @@ const styles = StyleSheet.create({
     },
 
     buttonText: {
-                flex: 1,
+        flex: 1,
         justifyContent: 'center',
         textAlign: 'center',
         color: '#FFF',
