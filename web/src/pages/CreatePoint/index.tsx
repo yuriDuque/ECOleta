@@ -32,11 +32,14 @@ const CreatePoint = () => {
     const [ufs, setUfs] = useState<string[]>([]);
     const [cities, setCities] = useState<string[]>([]);
 
-    const [initialPosition, seItinitialPosition] = useState<[number, number]>([0,0]);
+    const [initialPosition, seItinitialPosition] = useState<[number, number]>([0, 0]);
+
+    const [formData, setFormData] = useState({ name: '', email: '', whatsapp: '' });
 
     const [selectdUf, setSelectdUf] = useState('0');
     const [selectdCity, setSelectdCity] = useState('0');
-    const [selectdPosition, setSelectdPosition] = useState<[number, number]>([0,0]);
+    const [selectdItems, setSelectdItems] = useState<number[]>([]);
+    const [selectdPosition, setSelectdPosition] = useState<[number, number]>([0, 0]);
 
     // created ou mounted do vue.js
     useEffect(() => {
@@ -53,9 +56,9 @@ const CreatePoint = () => {
 
     useEffect(() => {
         axios.get<IBGEUFResponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
-        .then(response => {
-            setUfs(response.data.map(uf => uf.sigla));
-        })
+            .then(response => {
+                setUfs(response.data.map(uf => uf.sigla));
+            })
     }, []);
 
     useEffect(() => {
@@ -63,9 +66,9 @@ const CreatePoint = () => {
             return;
 
         axios.get<IBGECityResponse[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectdUf}/municipios`)
-        .then(response => {
-            setCities(response.data.map(city => city.nome));
-        })
+            .then(response => {
+                setCities(response.data.map(city => city.nome));
+            })
     }, [selectdUf]);
 
     function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
@@ -76,11 +79,28 @@ const CreatePoint = () => {
         setSelectdCity(event.target.value);
     }
 
-    function handleMapClick(event: LeafletMouseEvent){
+    function handleMapClick(event: LeafletMouseEvent) {
         setSelectdPosition([
             event.latlng.lat,
             event.latlng.lng
         ]);
+    }
+
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
+        const { name, value } = event.target;
+
+        setFormData({ ...formData, [name]: value })
+    }
+
+    function handleSelectItem(id: number) {
+        if(selectdItems.includes(id)){
+            const filteredIems = selectdItems.filter(item => item !== id);
+            setSelectdItems([...filteredIems])
+        }else{
+            setSelectdItems([...selectdItems, id])
+        }
+
+        console.log(selectdItems.includes(id));
     }
 
     return (
@@ -104,17 +124,17 @@ const CreatePoint = () => {
 
                     <div className="field">
                         <label htmlFor="name">Nome da entidade</label>
-                        <input type="text" name="name" id="name" />
+                        <input type="text" name="name" id="name" onChange={handleInputChange} />
                     </div>
 
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="email">Email</label>
-                            <input type="email" name="email" id="email" />
+                            <input type="email" name="email" id="email" onChange={handleInputChange} />
                         </div>
                         <div className="field">
                             <label htmlFor="whatsapp">Whatsapp</label>
-                            <input type="text" name="whatsapp" id="whatsapp" />
+                            <input type="text" name="whatsapp" id="whatsapp" onChange={handleInputChange} />
                         </div>
                     </div>
                 </fieldset>
@@ -164,7 +184,11 @@ const CreatePoint = () => {
 
                     <ul className="items-grid">
                         {items.map(item => (
-                            <li key={item.id}>
+                            <li 
+                            key={item.id} 
+                            onClick={() => handleSelectItem(item.id)} 
+                            className={selectdItems.includes(item.id) ? 'selected' : ''}
+                            >
                                 <img src={item.image_url} alt={item.title} />
                                 <span>{item.title}</span>
                             </li>
