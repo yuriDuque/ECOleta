@@ -1,13 +1,71 @@
-import React from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { Map, TileLayer, Marker } from 'react-leaflet';
+import axios from 'axios';
+
+import api from '../../services/api'
 
 import './styles.css';
 
 import logo from '../../assets/logo.svg'
 
+// sempre quando se cria um state para um arry ou objeto, precisa manualmente informar o tipo
+
+interface Item {
+    id: number
+    title: string,
+    image_url: string
+}
+
+interface IBGEUFResponse {
+    sigla: string;
+}
+
+interface IBGECityResponse {
+    nome: string;
+}
+
 const CreatePoint = () => {
+    const [items, setItems] = useState<Item[]>([]);
+    const [ufs, setUfs] = useState<string[]>([]);
+    const [cities, setCities] = useState<string[]>([]);
+
+    const [selectdUf, setSelectdUf] = useState('0');
+    const [selectdCity, setCelectdCity] = useState('0');
+
+    // created ou mounted do vue.js
+    useEffect(() => {
+        api.get('items').then(response => {
+            setItems(response.data);
+        })
+    }, []);
+
+    useEffect(() => {
+        axios.get<IBGEUFResponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+        .then(response => {
+            setUfs(response.data.map(uf => uf.sigla));
+        })
+    }, []);
+
+    useEffect(() => {
+        if (selectdUf === '0')
+            return;
+
+        axios.get<IBGECityResponse[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectdUf}/municipios`)
+        .then(response => {
+            setCities(response.data.map(city => city.nome));
+        })
+    }, [selectdUf]);
+
+    function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
+        setSelectdUf(event.target.value);
+    }
+
+    function handleSelectCity(event: ChangeEvent<HTMLSelectElement>) {
+        setCelectdCity(event.target.value);
+    }
+
     return (
         <div id="page-create-point">
             <header>
@@ -51,7 +109,7 @@ const CreatePoint = () => {
                     </legend>
 
                     <Map center={[-21.7630162, -43.3777264]} zoom={15}>
-                        <TileLayer 
+                        <TileLayer
                             attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
@@ -62,14 +120,20 @@ const CreatePoint = () => {
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="uf">Estado (UF)</label>
-                            <select name="uf" id="uf">
+                            <select name="uf" id="uf" value={selectdUf} onChange={handleSelectUf}>
                                 <option value="0">Selecione uma UF</option>
+                                {ufs.map(uf => (
+                                    <option key={uf} value={uf}>{uf}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="field">
                             <label htmlFor="city">Cidade</label>
-                            <select name="city" id="city">
+                            <select name="city" id="city" value={selectdCity} onChange={handleSelectCity}>
                                 <option value="0">Selecione uma cidade</option>
+                                {cities.map(uf => (
+                                    <option key={uf} value={uf}>{uf}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
@@ -82,35 +146,12 @@ const CreatePoint = () => {
                     </legend>
 
                     <ul className="items-grid">
-                        <li className="selected">
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
-
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
-
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
-
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
-
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
-
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste" />
-                            <span>Óleo de cozinha</span>
-                        </li>
+                        {items.map(item => (
+                            <li key={item.id}>
+                                <img src={item.image_url} alt={item.title} />
+                                <span>{item.title}</span>
+                            </li>
+                        ))}
                     </ul>
                 </fieldset>
 
