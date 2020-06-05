@@ -1,9 +1,13 @@
-import React from 'react';
+import React  from 'react';
 import './App.css';
+
+import Routes from './routes'
 
 function App() {
   return (
-        <p>Edit and save to reload.</p>
+        <div>
+          <Routes/>
+        </div>
   );
 }
 
