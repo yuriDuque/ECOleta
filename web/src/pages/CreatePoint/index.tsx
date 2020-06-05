@@ -9,6 +9,7 @@ import api from '../../services/api'
 import './styles.css';
 
 import logo from '../../assets/logo.svg'
+import { LeafletMouseEvent } from 'leaflet';
 
 // sempre quando se cria um state para um arry ou objeto, precisa manualmente informar o tipo
 
@@ -31,10 +32,19 @@ const CreatePoint = () => {
     const [ufs, setUfs] = useState<string[]>([]);
     const [cities, setCities] = useState<string[]>([]);
 
+    const [initialPosition, seItinitialPosition] = useState<[number, number]>([0,0]);
+
     const [selectdUf, setSelectdUf] = useState('0');
-    const [selectdCity, setCelectdCity] = useState('0');
+    const [selectdCity, setSelectdCity] = useState('0');
+    const [selectdPosition, setSelectdPosition] = useState<[number, number]>([0,0]);
 
     // created ou mounted do vue.js
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition(position => {
+            seItinitialPosition([position.coords.latitude, position.coords.longitude]);
+        })
+    }, []);
+
     useEffect(() => {
         api.get('items').then(response => {
             setItems(response.data);
@@ -63,7 +73,14 @@ const CreatePoint = () => {
     }
 
     function handleSelectCity(event: ChangeEvent<HTMLSelectElement>) {
-        setCelectdCity(event.target.value);
+        setSelectdCity(event.target.value);
+    }
+
+    function handleMapClick(event: LeafletMouseEvent){
+        setSelectdPosition([
+            event.latlng.lat,
+            event.latlng.lng
+        ]);
     }
 
     return (
@@ -108,12 +125,12 @@ const CreatePoint = () => {
                         <span>Selecione o endereço no mapa</span>
                     </legend>
 
-                    <Map center={[-21.7630162, -43.3777264]} zoom={15}>
+                    <Map center={initialPosition} zoom={15} onClick={handleMapClick}>
                         <TileLayer
                             attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <Marker position={[-21.7630162, -43.3777264]}>
+                        <Marker position={selectdPosition}>
                         </Marker>
                     </Map>
 
