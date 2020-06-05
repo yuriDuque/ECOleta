@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { Map, TileLayer, Marker } from 'react-leaflet';
@@ -36,10 +36,10 @@ const CreatePoint = () => {
 
     const [formData, setFormData] = useState({ name: '', email: '', whatsapp: '' });
 
-    const [selectdUf, setSelectdUf] = useState('0');
-    const [selectdCity, setSelectdCity] = useState('0');
-    const [selectdItems, setSelectdItems] = useState<number[]>([]);
-    const [selectdPosition, setSelectdPosition] = useState<[number, number]>([0, 0]);
+    const [selectedUf, setSelectedUf] = useState('0');
+    const [selectedCity, setSelectedCity] = useState('0');
+    const [selectedItems, setSelectedItems] = useState<number[]>([]);
+    const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
 
     // created ou mounted do vue.js
     useEffect(() => {
@@ -62,25 +62,25 @@ const CreatePoint = () => {
     }, []);
 
     useEffect(() => {
-        if (selectdUf === '0')
+        if (selectedUf === '0')
             return;
 
-        axios.get<IBGECityResponse[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectdUf}/municipios`)
+        axios.get<IBGECityResponse[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedUf}/municipios`)
             .then(response => {
                 setCities(response.data.map(city => city.nome));
             })
-    }, [selectdUf]);
+    }, [selectedUf]);
 
     function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
-        setSelectdUf(event.target.value);
+        setSelectedUf(event.target.value);
     }
 
     function handleSelectCity(event: ChangeEvent<HTMLSelectElement>) {
-        setSelectdCity(event.target.value);
+        setSelectedCity(event.target.value);
     }
 
     function handleMapClick(event: LeafletMouseEvent) {
-        setSelectdPosition([
+        setSelectedPosition([
             event.latlng.lat,
             event.latlng.lng
         ]);
@@ -93,14 +93,40 @@ const CreatePoint = () => {
     }
 
     function handleSelectItem(id: number) {
-        if(selectdItems.includes(id)){
-            const filteredIems = selectdItems.filter(item => item !== id);
-            setSelectdItems([...filteredIems])
+        if(selectedItems.includes(id)){
+            const filteredIems = selectedItems.filter(item => item !== id);
+
+            setSelectedItems([...filteredIems])
         }else{
-            setSelectdItems([...selectdItems, id])
+            setSelectedItems([...selectedItems, id])
         }
 
-        console.log(selectdItems.includes(id));
+        console.log(selectedItems.includes(id));
+    }
+
+    async function handleSubmit(event:FormEvent){
+        event.preventDefault();
+
+        const {name, email, whatsapp} = formData;
+        const uf = selectedUf;
+        const city = selectedCity;
+        const [latitude, longitude] = selectedPosition;
+        const items = selectedItems;
+
+        const data = {
+            name,
+            email,
+            whatsapp,
+            uf,
+            city,
+            latitude,
+            longitude,
+            items
+        };
+        
+        await api.post('points', data);
+
+        alert('Ponto de coleta cadastrado com sucesso!');
     }
 
     return (
@@ -114,7 +140,7 @@ const CreatePoint = () => {
                 </Link>
             </header>
 
-            <form action="">
+            <form onSubmit={handleSubmit}>
                 <h1>Cadastro do <br /> ponto de coleta</h1>
 
                 <fieldset>
@@ -150,14 +176,14 @@ const CreatePoint = () => {
                             attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <Marker position={selectdPosition}>
+                        <Marker position={selectedPosition}>
                         </Marker>
                     </Map>
 
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="uf">Estado (UF)</label>
-                            <select name="uf" id="uf" value={selectdUf} onChange={handleSelectUf}>
+                            <select name="uf" id="uf" value={selectedUf} onChange={handleSelectUf}>
                                 <option value="0">Selecione uma UF</option>
                                 {ufs.map(uf => (
                                     <option key={uf} value={uf}>{uf}</option>
@@ -166,7 +192,7 @@ const CreatePoint = () => {
                         </div>
                         <div className="field">
                             <label htmlFor="city">Cidade</label>
-                            <select name="city" id="city" value={selectdCity} onChange={handleSelectCity}>
+                            <select name="city" id="city" value={selectedCity} onChange={handleSelectCity}>
                                 <option value="0">Selecione uma cidade</option>
                                 {cities.map(uf => (
                                     <option key={uf} value={uf}>{uf}</option>
@@ -187,7 +213,7 @@ const CreatePoint = () => {
                             <li 
                             key={item.id} 
                             onClick={() => handleSelectItem(item.id)} 
-                            className={selectdItems.includes(item.id) ? 'selected' : ''}
+                            className={selectedItems.includes(item.id) ? 'selected' : ''}
                             >
                                 <img src={item.image_url} alt={item.title} />
                                 <span>{item.title}</span>
